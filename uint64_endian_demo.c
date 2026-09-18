@@ -6,6 +6,7 @@
  *   host がリトルエンディアンなら htole32 はそのまま、htobe32 は逆順になる。
  */
 
+#define _DEFAULT_SOURCE
 #include <endian.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -18,10 +19,10 @@ int main(void)
         uint8_t arr[4];
     } x;
 
-    x.arr[0] = 0x11;      /* Lowest-address byte */
+    x.arr[0] = 0x11;       /* Lowest-address byte */
     x.arr[1] = 0x22;
     x.arr[2] = 0x33;
-    x.arr[3] = 0x44;      /* Highest-address byte */
+    x.arr[3] = 0x44;       /* Highest-address byte */
 
     printf("x.u32 = %#x\n", x.u32);
     printf("htole32(x.u32) = %#x\n", htole32(x.u32));
