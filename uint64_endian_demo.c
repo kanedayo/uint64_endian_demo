@@ -2,23 +2,24 @@
  * uint64_endian_demo.c
  *
  * システムのエンディアン（リトル/ビッグ）を判定するデモ。
- * 32bit 値のバイト配置から LSB が低位アドレスに来るかを確認する。
+ * uint64_t 値のバイト配置から LSB が低位アドレスに来るかを確認する。
  */
 
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 int main(void)
 {
-    uint32_t test32 = 0x01020304;
-    uint8_t *p = (uint8_t *)&test32;
-    int is_little_endian = (p[0] == 0x04);
+    uint64_t test64 = 0x0123456789ABCDEFULL;
+    uint8_t *p = (uint8_t *)&test64;
+    int is_little_endian = (p[0] == 0xEF);
 
     printf("========================================================\n");
-    printf(" Endian Detection Demo\n");
+    printf(" uint64_t Endian Detection Demo\n");
     printf("========================================================\n\n");
 
-    printf("Test value: 0x%08X\n", (unsigned)test32);
+    printf("Test value: 0x%016" PRIx64 "\n", (uint64_t)test64);
     printf("Byte at lowest address: 0x%02X\n\n", (unsigned)p[0]);
 
     if (is_little_endian) {
