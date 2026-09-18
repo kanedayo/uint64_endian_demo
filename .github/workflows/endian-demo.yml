@@ -1,0 +1,99 @@
+name: uint64_t Endian Layout Demo
+
+on:
+  push:
+    paths:
+      - 'uint64_endian_demo.c'
+      - '.github/workflows/endian-demo.yml'
+  workflow_dispatch:
+
+jobs:
+  endian-test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - name: "x86_64 native"
+            arch: x86_64
+            cc: gcc
+            qemu: ""
+            endian: "Little-Endian"
+            triplet: x86_64-linux-gnu
+            apt_pkg: ""
+
+          - name: "AArch64 (native)"
+            arch: aarch64
+            cc: aarch64-linux-gnu-gcc
+            qemu: qemu-aarch64-static
+            endian: "Little-Endian"
+            triplet: aarch64-linux-gnu
+            apt_pkg: gcc-aarch64-linux-gnu
+
+          - name: "PowerPC64 (BE)"
+            arch: ppc64
+            cc: powerpc64-linux-gnu-gcc
+            qemu: qemu-ppc64-static
+            endian: "Big-Endian"
+            triplet: powerpc64-linux-gnu
+            apt_pkg: gcc-powerpc64-linux-gnu
+
+          - name: "IBM Z (s390x)"
+            arch: s390x
+            cc: s390x-linux-gnu-gcc
+            qemu: qemu-s390x-static
+            endian: "Big-Endian"
+            triplet: s390x-linux-gnu
+            apt_pkg: gcc-s390x-linux-gnu
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static binutils
+          if [ -n "${{ matrix.target.apt_pkg }}" ]; then
+            sudo apt-get install -y "${{ matrix.target.apt_pkg }}"
+          fi
+
+      - name: Show compiler info
+        run: |
+          echo "=== Target: ${{ matrix.target.name }} ==="
+          ${{ matrix.target.cc }} --version | head -n 1
+          ${{ matrix.target.cc }} -dumpmachine
+
+      - name: Compile
+        run: |
+          ${{ matrix.target.cc }} \
+            -std=c11 -pedantic -Wall -Wextra -O2 \
+            uint64_endian_demo.c \
+            -o demo_${{ matrix.target.arch }}
+
+          echo "Binary:"
+          file demo_${{ matrix.target.arch }}
+
+      - name: Extract raw bytes
+        run: |
+          echo "--- Hex dump (first 64 bytes of binary) ---"
+          objdump -s -j .rodata demo_${{ matrix.target.arch }} 2>/dev/null \
+            | head -n 40
+
+      - name: Run (native)
+        if: matrix.target.qemu == ''
+        run: |
+          echo "======================================================"
+          echo "  ${{ matrix.target.name }} — ${{ matrix.target.endian }}"
+          echo "======================================================"
+          ./demo_${{ matrix.target.arch }}
+
+      - name: Run (QEMU user-mode)
+        if: matrix.target.qemu != ''
+        run: |
+          echo "======================================================"
+          echo "  ${{ matrix.target.name }} — ${{ matrix.target.endian }}"
+          echo "======================================================"
+          ${{ matrix.target.qemu }} \
+            -L /usr/${{ matrix.target.triplet }} \
+            ./demo_${{ matrix.target.arch }}
