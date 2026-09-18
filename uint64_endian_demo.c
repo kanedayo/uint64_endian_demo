@@ -30,5 +30,21 @@ int main(void)
         printf("    Most-significant byte stored at lowest address.\n");
     }
 
+    union {
+        uint8_t u8[8];
+        uint16_t u16[4];
+        uint32_t u32[2];
+        uint64_t u64;
+    } uni64;
+    uni64.u64 = *(uint64_t*)(uint8_t[]){0x01,0x23,0x45,0x67,0x89,0xAB,0xCD,0xEF};
+    for(int i=0;i<8;i++)
+    printf(" u8[%d]=0x%02X\n",i,uni64.u8[i]);
+    for(int i=0;i<4;i++)
+    printf("u16[%d]=0x%02X\n",i,uni64.u16[i]);
+    for(int i=0;i<2;i++)
+    printf("u32[%d]=0x%02X\n",i,uni64.u32[i]);
+    for(int i=0;i<1;i++)
+    printf("u64[%d]=0x%02lX\n",i,uni64.u64   );
+
     return 0;
 }
